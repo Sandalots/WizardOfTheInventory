@@ -110,6 +110,11 @@ class WizardOfTheInventoryApp(ctk.CTk):
         self.summary_text._textbox.tag_config("bold", font=bold_font)
         self.answer_text._textbox.tag_config("bold", font=bold_font)
 
+        # Force window to the front on macOS
+        self.attributes('-topmost', True)
+        self.update()
+        self.attributes('-topmost', False)
+
     # --- LOGIC ---
 
     def insert_markdown_text(self, textbox, text):
