@@ -1,8 +1,6 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import pandas as pd
-
-# The NEW import statement
 from google import genai
 
 # ==========================================
@@ -19,12 +17,13 @@ ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
 
-class FarmStockApp(ctk.CTk):
+class WizardOfTheInventoryApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("Farm Stock AI Analyzer")
-        self.geometry("900x600")
+        # --- APP BRANDING ---
+        self.title("Wizard Of The Inventory")
+        self.geometry("900x650")
         self.df = None
 
         # --- GRID LAYOUT ---
@@ -38,7 +37,7 @@ class FarmStockApp(ctk.CTk):
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
 
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Farm Stock AI",
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Wizard Of The\nInventory",
                                        font=ctk.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
@@ -91,14 +90,32 @@ class FarmStockApp(ctk.CTk):
 
         # Q&A Input Area
         self.query_entry = ctk.CTkEntry(self.tabview.tab("Q&A Chat"),
-                                        placeholder_text="Ask about specific stock (e.g., 'How is the milk doing?')...")
+                                        placeholder_text="Ask the Wizard (e.g., 'How is the milk doing?')...")
         self.query_entry.grid(row=1, column=0, sticky="ew", padx=(10, 10), pady=10)
 
         self.ask_btn = ctk.CTkButton(self.tabview.tab("Q&A Chat"), text="Ask AI", command=self.ask_question, width=100,
                                      state="disabled")
         self.ask_btn.grid(row=1, column=1, sticky="e", padx=(0, 10), pady=10)
 
+        # ==========================================
+        # CONFIGURE BOLD TAGS FOR MARKDOWN
+        # ==========================================
+        bold_font = ctk.CTkFont(size=14, weight="bold")
+        self.summary_text._textbox.tag_config("bold", font=bold_font)
+        self.answer_text._textbox.tag_config("bold", font=bold_font)
+
     # --- LOGIC ---
+
+    def insert_markdown_text(self, textbox, text):
+        """A lightweight markdown parser for Tkinter text boxes."""
+        parts = text.split("**")
+        for i, part in enumerate(parts):
+            if i % 2 == 1:
+                # Odd index means it was wrapped in ** asterisks
+                textbox.insert("end", part, "bold")
+            else:
+                # Even index means normal text
+                textbox.insert("end", part)
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         ctk.set_appearance_mode(new_appearance_mode)
@@ -123,12 +140,13 @@ class FarmStockApp(ctk.CTk):
 
         self.tabview.set("General Summary")
         self.summary_text.delete("1.0", "end")
-        self.summary_text.insert("end", "Analyzing data... please wait.\n")
+        self.summary_text.insert("end", "Consulting the crystal ball... please wait.\n")
         self.update()
 
         data_str = self.df.to_string(index=False)
         prompt = f"""
-        You are an expert agricultural business analyst. I am providing you with 30 days of farm stock data.
+        You are an expert agricultural business analyst, known as the Wizard of the Inventory. 
+        I am providing you with 30 days of farm stock data.
         The rows are items, the columns are dates, and the values are remaining stock.
 
         Please provide a short, punchy summary of the overall inventory performance. 
@@ -140,13 +158,12 @@ class FarmStockApp(ctk.CTk):
         """
 
         try:
-            # NEW SDK SYNTAX for generating content
             response = client.models.generate_content(
                 model=MODEL_ID,
                 contents=prompt
             )
             self.summary_text.delete("1.0", "end")
-            self.summary_text.insert("end", response.text)
+            self.insert_markdown_text(self.summary_text, response.text)
         except Exception as e:
             self.summary_text.insert("end", f"\nError communicating with AI: {e}")
 
@@ -165,7 +182,7 @@ class FarmStockApp(ctk.CTk):
 
         data_str = self.df.to_string(index=False)
         prompt = f"""
-        You are a helpful inventory assistant for a small farm. 
+        You are the 'Wizard of the Inventory', a helpful inventory assistant for a small farm. 
         Based on the following 30-day stock data (rows = items, columns = dates, values = remaining stock), 
         answer the user's specific question using natural language. 
         If they ask how an item is doing, tell them if it's booming, needs restocking, or isn't selling well.
@@ -177,18 +194,20 @@ class FarmStockApp(ctk.CTk):
         """
 
         try:
-            # NEW SDK SYNTAX for generating content
             response = client.models.generate_content(
                 model=MODEL_ID,
                 contents=prompt
             )
             self.answer_text.delete("1.0", "end")
-            self.answer_text.insert("end", f"You asked: {user_question}\n\n{response.text}\n\n" + "-" * 40 + "\n\n")
+            self.insert_markdown_text(self.answer_text, f"You asked: {user_question}\n\n")
+            self.insert_markdown_text(self.answer_text, response.text)
+            self.answer_text.insert("end", "\n\n" + "-" * 40 + "\n\n")
+
             self.query_entry.delete(0, "end")
         except Exception as e:
             self.answer_text.insert("end", f"\nError communicating with AI: {e}")
 
 
 if __name__ == "__main__":
-    app = FarmStockApp()
+    app = WizardOfTheInventoryApp()
     app.mainloop()
