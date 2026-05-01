@@ -1,12 +1,12 @@
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 import pandas as pd
 from google import genai
 
 # ==========================================
 # SETUP: Add your Gemini API Key here
 # ==========================================
-API_KEY = "AIzaSyDOIkEt65cf9VbDRDe8UxY_BP0YA5LvBj0"
+API_KEY = "YOUR_API_KEY_HERE"
 
 # Initialize the NEW client
 client = genai.Client(api_key=API_KEY)
@@ -35,7 +35,7 @@ class WizardOfTheInventoryApp(ctk.CTk):
         # ==========================================
         self.sidebar_frame = ctk.CTkFrame(self, width=250, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+        self.sidebar_frame.grid_rowconfigure(5, weight=1)  # Adjusted to push bottom elements down
 
         self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Wizard Of The\nInventory",
                                        font=ctk.CTkFont(size=20, weight="bold"))
@@ -53,12 +53,18 @@ class WizardOfTheInventoryApp(ctk.CTk):
                                          state="disabled")
         self.summary_btn.grid(row=3, column=0, padx=20, pady=10)
 
+        # NEW: View Data Button
+        self.view_data_btn = ctk.CTkButton(self.sidebar_frame, text="View Raw Data", command=self.view_data,
+                                           state="disabled", fg_color="transparent", border_width=2,
+                                           text_color=("gray10", "#DCE4EE"))
+        self.view_data_btn.grid(row=4, column=0, padx=20, pady=10)
+
         # Appearance Toggle
         self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
                                                              command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 20))
+        self.appearance_mode_optionemenu.grid(row=7, column=0, padx=20, pady=(10, 20))
         self.appearance_mode_optionemenu.set("System")
 
         # ==========================================
@@ -111,10 +117,8 @@ class WizardOfTheInventoryApp(ctk.CTk):
         parts = text.split("**")
         for i, part in enumerate(parts):
             if i % 2 == 1:
-                # Odd index means it was wrapped in ** asterisks
                 textbox.insert("end", part, "bold")
             else:
-                # Even index means normal text
                 textbox.insert("end", part)
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
@@ -128,11 +132,56 @@ class WizardOfTheInventoryApp(ctk.CTk):
                 filename = file_path.split('/')[-1]
                 self.file_label.configure(text=f"Loaded: {filename}", text_color="green")
 
-                # Enable the AI buttons
+                # Enable the buttons
                 self.summary_btn.configure(state="normal")
                 self.ask_btn.configure(state="normal")
+                self.view_data_btn.configure(state="normal")
             except Exception as e:
                 messagebox.showerror("Error", f"Could not read file: {e}")
+
+    def view_data(self):
+        """Opens a popup window displaying the CSV data in a table."""
+        if self.df is None:
+            return
+
+        # Create a popup window
+        data_window = ctk.CTkToplevel(self)
+        data_window.title("Raw CSV Data")
+        data_window.geometry("800x400")
+
+        # Ensure it stays on top initially
+        data_window.attributes("-topmost", True)
+        data_window.after(100, lambda: data_window.attributes("-topmost", False))
+
+        frame = ctk.CTkFrame(data_window)
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Create Treeview
+        tree = ttk.Treeview(frame)
+
+        # Scrollbars
+        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
+        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+
+        # Grid layout for table and scrollbars
+        tree.grid(column=0, row=0, sticky='nsew')
+        vsb.grid(column=1, row=0, sticky='ns')
+        hsb.grid(column=0, row=1, sticky='ew')
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+
+        # Define columns
+        tree["columns"] = list(self.df.columns)
+        tree["show"] = "headings"  # Hides the default empty first column
+
+        for col in self.df.columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=120, anchor="center")
+
+        # Insert data
+        for index, row in self.df.iterrows():
+            tree.insert("", "end", values=list(row))
 
     def generate_summary(self):
         if self.df is None:
