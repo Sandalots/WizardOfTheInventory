@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import filedialog, messagebox, ttk
 import pandas as pd
 from google import genai
+from PIL import Image
 
 # ==========================================
 # SETUP: Add your Gemini API Key here
@@ -35,40 +36,53 @@ class WizardOfTheInventoryApp(ctk.CTk):
         # ==========================================
         self.sidebar_frame = ctk.CTkFrame(self, width=250, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(5, weight=1)  # Adjusted to push bottom elements down
+
+        # Pushed to row 7 to account for the new image row
+        self.sidebar_frame.grid_rowconfigure(7, weight=1)
 
         self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Wizard Of The\nInventory",
                                        font=ctk.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
+        # --- NEW ICON CODE ---
+        # Note: Replace "your_icon.png" with your actual file name!
+        # We scale it to 138x150 to fit the sidebar while maintaining your 368x400 aspect ratio
+        icon_image = ctk.CTkImage(light_image=Image.open("wizard.png"),
+                                  dark_image=Image.open("wizard.png"),
+                                  size=(138, 150))
+
+        self.icon_label = ctk.CTkLabel(self.sidebar_frame, text="", image=icon_image)
+        self.icon_label.grid(row=1, column=0, padx=20, pady=(0, 15))
+        # ---------------------
+
         # Upload Section
         self.upload_btn = ctk.CTkButton(self.sidebar_frame, text="Upload CSV Inventory", command=self.upload_csv)
-        self.upload_btn.grid(row=1, column=0, padx=20, pady=10)
+        self.upload_btn.grid(row=2, column=0, padx=20, pady=10)
 
         self.file_label = ctk.CTkLabel(self.sidebar_frame, text="No file loaded.", text_color="gray")
-        self.file_label.grid(row=2, column=0, padx=20, pady=(0, 20))
+        self.file_label.grid(row=3, column=0, padx=20, pady=(0, 10))
 
         # Actions
         self.summary_btn = ctk.CTkButton(self.sidebar_frame, text="Generate Summary", command=self.generate_summary,
                                          state="disabled")
-        self.summary_btn.grid(row=3, column=0, padx=20, pady=10)
+        self.summary_btn.grid(row=4, column=0, padx=20, pady=10)
 
-        # NEW: View Data Button
         self.view_data_btn = ctk.CTkButton(self.sidebar_frame, text="View Raw Data", command=self.view_data,
                                            state="disabled", fg_color="transparent", border_width=2,
                                            text_color=("gray10", "#DCE4EE"))
-        self.view_data_btn.grid(row=4, column=0, padx=20, pady=10)
+        self.view_data_btn.grid(row=5, column=0, padx=20, pady=10)
 
+        # Help Button
         self.help_btn = ctk.CTkButton(self.sidebar_frame, text="How to Use (Help)", command=self.show_help,
                                       fg_color="#4a4a4a", hover_color="#333333")
-        self.help_btn.grid(row=5, column=0, padx=20, pady=10)
+        self.help_btn.grid(row=6, column=0, padx=20, pady=10)
 
         # Appearance Toggle
         self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
                                                              command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=7, column=0, padx=20, pady=(10, 20))
+        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 20))
         self.appearance_mode_optionemenu.set("System")
 
         # ==========================================

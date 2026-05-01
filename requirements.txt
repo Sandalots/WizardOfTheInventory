@@ -1,0 +1,4 @@
+customtkinter
+pandas
+google-genai
+Pillow
