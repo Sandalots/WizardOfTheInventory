@@ -59,6 +59,10 @@ class WizardOfTheInventoryApp(ctk.CTk):
                                            text_color=("gray10", "#DCE4EE"))
         self.view_data_btn.grid(row=4, column=0, padx=20, pady=10)
 
+        self.help_btn = ctk.CTkButton(self.sidebar_frame, text="How to Use (Help)", command=self.show_help,
+                                      fg_color="#4a4a4a", hover_color="#333333")
+        self.help_btn.grid(row=5, column=0, padx=20, pady=10)
+
         # Appearance Toggle
         self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
@@ -143,6 +147,44 @@ class WizardOfTheInventoryApp(ctk.CTk):
                 self.view_data_btn.configure(state="normal")
             except Exception as e:
                 messagebox.showerror("Error", f"Could not read file: {e}")
+
+    def show_help(self):
+        """Opens a popup window displaying instructions."""
+        help_window = ctk.CTkToplevel(self)
+        help_window.title("Wizard's Guide (Help)")
+        help_window.geometry("550x450")
+
+        # Ensure it stays on top initially (macOS fix)
+        help_window.attributes("-topmost", True)
+        help_window.after(100, lambda: help_window.attributes("-topmost", False))
+
+        help_textbox = ctk.CTkTextbox(help_window, wrap="word", font=ctk.CTkFont(size=14))
+        help_textbox.pack(fill="both", expand=True, padx=20, pady=20)
+
+        instructions = """Welcome to the Wizard Of The Inventory!
+
+        This AI-powered dashboard helps you analyze your stock inventory data instantly. Here is how to use it:
+
+        1. Upload Your Data
+        Click "Upload CSV Inventory" to load your data. 
+        Your CSV should be formatted with items as rows and dates as columns.
+
+        2. Generate Summary
+        Click "Generate Summary" to have the AI review your entire inventory. It will automatically switch to the 'General Summary' tab and tell you what is selling fast and what is dead weight.
+
+        3. Ask Specific Questions
+        Switch to the 'Q&A Chat' tab. Here, you can ask the Wizard direct questions about your stock. 
+        Try asking things like:
+        • "Should I increase egg production?"
+        • "What happens to the meat stock over the weekends?"
+        • "Which item made the least sales?"
+
+        4. View Raw Data
+        Need to check the numbers yourself? Click "View Raw Data" to open a scrollable table of your uploaded CSV.
+        """
+
+        help_textbox.insert("0.0", instructions)
+        help_textbox.configure(state="disabled")  # Makes the text read-only
 
     def view_data(self):
         """Opens a popup window displaying the CSV data in a table."""
