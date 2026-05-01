@@ -7,7 +7,7 @@ from PIL import Image
 # ==========================================
 # SETUP: Add your Gemini API Key here
 # ==========================================
-API_KEY = "YOUR_API_KEY_HERE"
+API_KEY = ""
 
 # Initialize the NEW client
 client = genai.Client(api_key=API_KEY)
